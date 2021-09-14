@@ -1,12 +1,14 @@
 package com.dsid;
 
-import com.dsid.model.KeyBoardService;
 import com.dsid.model.SpringFxmlLoader;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -19,10 +21,15 @@ import java.net.ServerSocket;
 import java.util.Objects;
 
 public class Main extends Application {
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
     private static final int PORT = 9999;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        PropertyConfigurator.configure(getClass().getClassLoader().getResource("log4j.properties"));
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            log.error(e.toString());
+        });
         checkIfRunning(); //Check first if the Application is aready running.
         addToTray(primaryStage);
         SpringFxmlLoader.init("Beans.xml");
@@ -32,7 +39,6 @@ public class Main extends Application {
         primaryStage.setScene(new Scene(root, 300, 275));
         primaryStage.show();
         Platform.setImplicitExit(false); //Prevent the Application from Terminating when it's close
-        ((KeyBoardService) SpringFxmlLoader.getContext().getBean("keyBoardService")).run();
     }
 
     public static void main(String[] args) {
@@ -44,18 +50,17 @@ public class Main extends Application {
             //Bind to localhost adapter with a zero connection queue
             new ServerSocket(PORT, 0, InetAddress.getByAddress(new byte[]{127, 0, 0, 1}));
         } catch (BindException e) {
-            System.err.println("Application already running.");
+            log.error("Application already running");
             System.exit(1);
         } catch (IOException e) {
-            System.err.println("Unexpected error when checking if application is already running.");
-            e.printStackTrace();
+            log.error("Unexpected error when checking if application is already running");
             System.exit(2);
         }
     }
 
     private static void addToTray(Stage primaryStage) throws IOException {
         if (!SystemTray.isSupported()) {
-            System.out.println("SystemTray is not supported");
+            log.error("SystemTray is not supported");
             return;
         }
         final Image image;
@@ -86,7 +91,7 @@ public class Main extends Application {
         try {
             tray.add(trayIcon);
         } catch (AWTException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

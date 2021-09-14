@@ -7,15 +7,17 @@ import org.jnativehook.NativeHookException;
 import org.jnativehook.NativeInputEvent;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class KeyBoardServiceImpl implements KeyBoardService {
+    private static final Logger log = LoggerFactory.getLogger(KeyBoardServiceImpl.class);
     private static final Set<Integer> keySet = new HashSet<>(Arrays.asList(NativeKeyEvent.VC_1, NativeKeyEvent.VC_2,
             NativeKeyEvent.VC_3, NativeKeyEvent.VC_4, NativeKeyEvent.VC_5, NativeKeyEvent.VC_6, NativeKeyEvent.VC_7,
             NativeKeyEvent.VC_8, NativeKeyEvent.VC_9, NativeKeyEvent.VC_0));
@@ -31,10 +33,10 @@ public class KeyBoardServiceImpl implements KeyBoardService {
             put(NativeKeyEvent.VC_C, false);
             put(NativeKeyEvent.VC_V, false);
         }};
+        run();
     }
 
-    @Override
-    public void run() {
+    private void run() {
         try {
             GlobalScreen.registerNativeHook();
             GlobalScreen.setEventDispatcher(new CustomExecutorService());
@@ -47,50 +49,43 @@ public class KeyBoardServiceImpl implements KeyBoardService {
 
                 @Override
                 public void nativeKeyPressed(NativeKeyEvent e) {
-                    System.out.println(e.getKeyCode() + " pressed");
-                    map.computeIfPresent(e.getKeyCode(), (key, value) -> true);
-                    if (keySet.contains(e.getKeyCode())) {
-                        key = e.getKeyCode();
-                        System.out.println("Attempting to consume key event..." + key);
-                        if (map.get(NativeKeyEvent.VC_CONTROL)) {
-                            disableNativeKeyEvent(e);
+                    try {
+                        map.computeIfPresent(e.getKeyCode(), (key, value) -> true);
+                        if (keySet.contains(e.getKeyCode())) {
+                            key = e.getKeyCode();
+                            if (map.get(NativeKeyEvent.VC_CONTROL)) {
+                                disableNativeKeyEvent(e);
+                            }
                         }
-                    }
-                    if (key == null || !map.get(NativeKeyEvent.VC_CONTROL)) {
-                        return;
-                    }
-                    if (map.get(NativeKeyEvent.VC_C)) {
-                        System.out.println("ctrl + shift + c + " + key);
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ex) {
-                            ex.printStackTrace();
+                        if (key == null || !map.get(NativeKeyEvent.VC_CONTROL)) {
+                            return;
                         }
-                        clipBoard.copy(key);
-                    } else if (map.get(NativeKeyEvent.VC_V)) {
-                        System.out.println("ctrl + shift + v + " + key);
-                        clipBoard.paste(key);
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ex) {
-                            ex.printStackTrace();
+                        if (map.get(NativeKeyEvent.VC_C)) {
+                            clipBoard.copy(key);
+                        } else if (map.get(NativeKeyEvent.VC_V)) {
+                            clipBoard.paste(key);
                         }
+                    } catch (Exception ex) {
+                        log.error(ex.toString());
                     }
                 }
 
                 @Override
                 public void nativeKeyReleased(NativeKeyEvent e) {
-                    System.out.println(e.getKeyCode() + " released");
-                    map.computeIfPresent(e.getKeyCode(), (key, value) -> false);
-                    if (keySet.contains(e.getKeyCode())) {
-                        key = null;
+                    try {
+                        map.computeIfPresent(e.getKeyCode(), (key, value) -> false);
+                        if (keySet.contains(e.getKeyCode())) {
+                            key = null;
+                        }
+                    } catch (Exception ex) {
+                        log.error(ex.toString());
                     }
                 }
             });
         } catch (NativeHookException e) {
-            e.printStackTrace();
+            throw new RuntimeException("error during register NativeHook", e);
         }
-        final Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
+        final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(GlobalScreen.class.getPackage().getName());
         logger.setLevel(Level.OFF);
         logger.setUseParentHandlers(false);
     }
@@ -133,9 +128,8 @@ public class KeyBoardServiceImpl implements KeyBoardService {
             final Field field = NativeInputEvent.class.getDeclaredField("reserved");
             field.setAccessible(true);
             field.setShort(event, (short) 0x01);
-            System.out.print("disabled\n");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("error during disabling 0-11 key", e);
         }
     }
 }
