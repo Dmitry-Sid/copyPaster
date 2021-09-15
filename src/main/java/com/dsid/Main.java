@@ -16,7 +16,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.BindException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.Objects;
 
@@ -26,6 +25,8 @@ public class Main extends Application {
     private static final int TRAY_ICON_WIDTH = 16;
     private static final int TRAY_ICON_HEIGHT = 16;
 
+    private static ServerSocket socket;
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -33,9 +34,9 @@ public class Main extends Application {
     private static synchronized void checkIfRunning() {
         try {
             //Bind to localhost adapter with a zero connection queue
-            new ServerSocket(PORT, 0, InetAddress.getByAddress(new byte[]{127, 0, 0, 1}));
+            socket = new ServerSocket(PORT);
         } catch (BindException e) {
-            log.error("Application already running");
+            log.error("Application is already running or port " + PORT + " is busy");
             System.exit(1);
         } catch (IOException e) {
             log.error("Unexpected error when checking if application is already running");
@@ -48,13 +49,8 @@ public class Main extends Application {
             log.error("SystemTray is not supported");
             return;
         }
-        final Image image;
-        try {
-            image = ImageIO.read(Objects.requireNonNull(Main.class.getClassLoader().getResource("img/icon.png")))
-                    .getScaledInstance(TRAY_ICON_WIDTH, TRAY_ICON_HEIGHT, Image.SCALE_DEFAULT);
-        } catch (IOException e) {
-            throw e;
-        }
+        final Image image = ImageIO.read(Objects.requireNonNull(Main.class.getClassLoader().getResource("img/icon.png")))
+                .getScaledInstance(TRAY_ICON_WIDTH, TRAY_ICON_HEIGHT, Image.SCALE_DEFAULT);
         final PopupMenu popup = new PopupMenu();
         final TrayIcon trayIcon = new TrayIcon(image, "CopyPaster", popup);
         final SystemTray tray = SystemTray.getSystemTray();
@@ -87,6 +83,15 @@ public class Main extends Application {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             log.error("Error", e);
         });
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    log.error("error during socket closing", e);
+                }
+            }
+        }));
         checkIfRunning(); //Check first if the Application is aready running.
         addToTray(primaryStage);
         SpringFxmlLoader.init("Beans.xml");
