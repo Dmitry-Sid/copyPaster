@@ -6,11 +6,15 @@ import com.dsid.model.ClipBoard;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 public class ClipBoardImpl implements ClipBoard, ClipboardOwner {
     private final Map<Integer, String> map = new ConcurrentHashMap<>();
+    private final List<Consumer<ClipBoardItem>> consumers = new CopyOnWriteArrayList<>();
 
     @Override
     public void copy(int key) {
@@ -26,6 +30,8 @@ public class ClipBoardImpl implements ClipBoard, ClipboardOwner {
                     final String value = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
                     if ((valueFromMap != null && !value.equals(valueFromMap)) || i > 8) {
                         map.put(key, value);
+                        final ClipBoardItem item = new ClipBoardItem(key, value);
+                        consumers.forEach(consumer -> consumer.accept(item));
                         break;
                     }
                 }
@@ -56,6 +62,16 @@ public class ClipBoardImpl implements ClipBoard, ClipboardOwner {
         } catch (UnsupportedFlavorException | IOException e) {
             throw new RuntimeException("error during clipboard handling (paste)", e);
         }
+    }
+
+    @Override
+    public void set(int key, String value) {
+        map.put(key, value);
+    }
+
+    @Override
+    public void subscribeChanges(Consumer<ClipBoardItem> consumer) {
+        consumers.add(consumer);
     }
 
     @Override

@@ -24,23 +24,6 @@ public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
     private static final int PORT = 9999;
 
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        PropertyConfigurator.configure(getClass().getClassLoader().getResource("log4j.properties"));
-        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-            log.error(e.toString());
-        });
-        checkIfRunning(); //Check first if the Application is aready running.
-        addToTray(primaryStage);
-        SpringFxmlLoader.init("Beans.xml");
-        final Parent root = (Parent) SpringFxmlLoader.load("fxml/main.fxml");
-
-        primaryStage.setTitle("Hello World");
-        primaryStage.setScene(new Scene(root, 300, 275));
-        primaryStage.show();
-        Platform.setImplicitExit(false); //Prevent the Application from Terminating when it's close
-    }
-
     public static void main(String[] args) {
         launch(args);
     }
@@ -93,5 +76,22 @@ public class Main extends Application {
         } catch (AWTException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        PropertyConfigurator.configure(getClass().getClassLoader().getResource("log4j.properties"));
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            log.error("Error", e);
+        });
+        checkIfRunning(); //Check first if the Application is aready running.
+        addToTray(primaryStage);
+        SpringFxmlLoader.init("Beans.xml");
+        final Parent root = (Parent) SpringFxmlLoader.load("fxml/main.fxml");
+
+        primaryStage.setTitle("CopyPaster");
+        primaryStage.setScene(new Scene(root, 600, 400));
+        primaryStage.show();
+        Platform.setImplicitExit(false); //Prevent the Application from Terminating when it's close
     }
 }

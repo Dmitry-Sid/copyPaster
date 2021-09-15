@@ -52,7 +52,7 @@ public class KeyBoardServiceImpl implements KeyBoardService {
                     try {
                         map.computeIfPresent(e.getKeyCode(), (key, value) -> true);
                         if (keySet.contains(e.getKeyCode())) {
-                            key = e.getKeyCode();
+                            key = transformToKeyNumber(e.getKeyCode());
                             if (map.get(NativeKeyEvent.VC_CONTROL)) {
                                 disableNativeKeyEvent(e);
                             }
@@ -90,6 +90,23 @@ public class KeyBoardServiceImpl implements KeyBoardService {
         logger.setUseParentHandlers(false);
     }
 
+    private Integer transformToKeyNumber(int keyCode) {
+        if (NativeKeyEvent.VC_0 == keyCode) {
+            return 0;
+        }
+        return (1 - NativeKeyEvent.VC_1) + keyCode;
+    }
+
+    private void disableNativeKeyEvent(NativeKeyEvent event) {
+        try {
+            final Field field = NativeInputEvent.class.getDeclaredField("reserved");
+            field.setAccessible(true);
+            field.setShort(event, (short) 0x01);
+        } catch (Exception e) {
+            throw new RuntimeException("error during disabling 0-11 key", e);
+        }
+    }
+
     private static class CustomExecutorService extends AbstractExecutorService {
         private boolean running;
 
@@ -120,16 +137,6 @@ public class KeyBoardServiceImpl implements KeyBoardService {
 
         public void execute(Runnable r) {
             r.run();
-        }
-    }
-
-    private void disableNativeKeyEvent(NativeKeyEvent event) {
-        try {
-            final Field field = NativeInputEvent.class.getDeclaredField("reserved");
-            field.setAccessible(true);
-            field.setShort(event, (short) 0x01);
-        } catch (Exception e) {
-            throw new RuntimeException("error during disabling 0-11 key", e);
         }
     }
 }

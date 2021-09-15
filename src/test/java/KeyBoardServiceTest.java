@@ -41,7 +41,7 @@ public class KeyBoardServiceTest {
             robot.keyRelease(KeyEvent.VK_1);
             robot.keyRelease(KeyEvent.VK_C);
         }
-        assertNull(map.get(2));
+        assertNull(map.get(1));
         try {
             robot.keyPress(KeyEvent.VK_CONTROL);
             robot.keyPress(KeyEvent.VK_1);
@@ -51,7 +51,7 @@ public class KeyBoardServiceTest {
             robot.keyRelease(KeyEvent.VK_CONTROL);
             robot.keyRelease(KeyEvent.VK_C);
         }
-        assertNull(map.get(2));
+        assertNull(map.get(1));
         try {
             robot.keyPress(KeyEvent.VK_SHIFT);
             robot.keyPress(KeyEvent.VK_1);
@@ -61,21 +61,21 @@ public class KeyBoardServiceTest {
             robot.keyRelease(KeyEvent.VK_1);
             robot.keyRelease(KeyEvent.VK_C);
         }
-        assertNull(map.get(2));
+        assertNull(map.get(1));
         callCtrlC(robot, 1);
-        assertEquals("test1", map.get(2));
+        assertEquals("test1", map.get(1));
         text.set("test0");
         callCtrlV(robot, 1);
         assertEquals("test1", text.get());
         text.set("test2");
         callCtrlC(robot, 2);
-        assertEquals("test2", map.get(3));
+        assertEquals("test2", map.get(2));
         text.set("test0");
         callCtrlV(robot, 2);
         assertEquals("test2", text.get());
 
-        assertEquals("test1", map.get(2));
-        assertEquals("test2", map.get(3));
+        assertEquals("test1", map.get(1));
+        assertEquals("test2", map.get(2));
         text.set("test0");
         callCtrlV(robot, 1);
         assertEquals("test1", text.get());

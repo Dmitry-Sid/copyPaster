@@ -1,14 +1,10 @@
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
-           http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
-           http://www.springframework.org/schema/context
-           http://www.springframework.org/schema/context/spring-context.xsd">
-    <bean id="mainController" class="com.dsid.controllers.MainController"/>
-  <!--  <bean id="exceptionController" class="dsid.controllers.ExceptionController" scope="prototype">
-        <constructor-arg index="0" ref="controllerCommunicator"/>
-    </bean>-->
+           http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+    <bean id="mainController" class="com.dsid.controllers.MainController">
+        <constructor-arg ref="clipBoard"/>
+    </bean>
     <bean id="keyBoardService" class="com.dsid.model.impl.KeyBoardServiceImpl">
         <constructor-arg ref="clipBoard"/>
     </bean>
