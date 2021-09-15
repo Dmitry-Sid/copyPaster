@@ -23,6 +23,8 @@ import java.util.Objects;
 public class Main extends Application {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
     private static final int PORT = 9999;
+    private static final int TRAY_ICON_WIDTH = 16;
+    private static final int TRAY_ICON_HEIGHT = 16;
 
     public static void main(String[] args) {
         launch(args);
@@ -48,7 +50,8 @@ public class Main extends Application {
         }
         final Image image;
         try {
-            image = ImageIO.read(Objects.requireNonNull(Main.class.getClassLoader().getResource("img/tray_image.png")));
+            image = ImageIO.read(Objects.requireNonNull(Main.class.getClassLoader().getResource("img/icon.png")))
+                    .getScaledInstance(TRAY_ICON_WIDTH, TRAY_ICON_HEIGHT, Image.SCALE_DEFAULT);
         } catch (IOException e) {
             throw e;
         }
@@ -90,6 +93,7 @@ public class Main extends Application {
         final Parent root = (Parent) SpringFxmlLoader.load("fxml/main.fxml");
 
         primaryStage.setTitle("CopyPaster");
+        primaryStage.getIcons().add(new javafx.scene.image.Image(Objects.requireNonNull(Main.class.getClassLoader().getResource("img/icon.png")).openStream()));
         primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
         Platform.setImplicitExit(false); //Prevent the Application from Terminating when it's close
