@@ -16,6 +16,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.BindException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.Objects;
 
@@ -34,7 +35,7 @@ public class Main extends Application {
     private static synchronized void checkIfRunning() {
         try {
             //Bind to localhost adapter with a zero connection queue
-            socket = new ServerSocket(PORT);
+            socket = new ServerSocket(PORT, 0, InetAddress.getByAddress(new byte[]{127, 0, 0, 1}));
         } catch (BindException e) {
             log.error("Application is already running or port " + PORT + " is busy");
             System.exit(1);
